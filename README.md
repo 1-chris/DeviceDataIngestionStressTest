@@ -3,8 +3,8 @@
 This is a simple stress test for the device data ingestion service. It is intended to be run on a single machine, and will generate a large number of devices and send data to the ingestion service.
 
 Related:
- - [Device Data Ingestion Service]()
- - [Device Data Ingestion Client]()
+ - [Intune Device Data Ingestion (Minimal API)](https://github.com/1-chris/IntuneDeviceDataIngestionAPI)
+ - [Device Data Ingestion Client](https://github.com/1-chris/IntuneDeviceDataIngestionClient)
 
 ------------------
 ## To build
