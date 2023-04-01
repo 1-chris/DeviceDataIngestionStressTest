@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 
 
@@ -17,7 +17,7 @@ List<BogusDataClient> bogusDataClients = new();
 
 for (int i = 0; i < numberOfClients; i++)
 {
-    bogusDataClients.Add(new BogusDataClient(httpEndpoint, authToken));
+    bogusDataClients.Add(new BogusDataClient(httpEndpoint, authToken, i));
 }
 
 foreach (BogusDataClient bogusDataClient in bogusDataClients) 
@@ -41,22 +41,20 @@ public class BogusDataClient
     private readonly string _computerNamePrefix = "FakeHost-";
     private readonly int _dataCollectionInterval = 60000;
     public string Endpoint { get; }
-    public string DeviceId { get; } = Guid.NewGuid().ToString();
-    public string AzureADDeviceId { get; } = Guid.NewGuid().ToString();
+    public string DeviceId { get; } = Guid.Empty.ToString();
+    public string AzureADDeviceId { get; } = Guid.Empty.ToString();
     public string AuthorizationToken { get; }
     public string ComputerName { get; }
     public DateTime LastBootUpTime { get; set; }
     public int TotalPhysicalMemoryMB { get; set; }
 
 
-    public BogusDataClient(string endpoint, string authToken)
+    public BogusDataClient(string endpoint, string authToken, int preSeed)
     {
+        Random random = new Random(1337+preSeed);
         Endpoint = endpoint;
         AuthorizationToken = authToken;
-
-        ComputerName = _computerNamePrefix + Guid.NewGuid().ToString().Replace("-","").Substring(26);
-
-        Random random = new Random();
+        ComputerName = _computerNamePrefix + random.Next(1000,1000000).ToString("D7");
 
         DateTime currentDate = DateTime.UtcNow;
         int daysAgo = random.Next(2, 100);
@@ -89,10 +87,10 @@ public class BogusDataClient
                 UptimeTotalDays = (DateTime.Now - LastBootUpTime).TotalDays,
                 FreePhysicalMemoryMB = random.Next((int)Math.Round((long)TotalPhysicalMemoryMB*0.85), (int)Math.Round((long)TotalPhysicalMemoryMB*0.98)),
                 TotalPhysicalMemoryMB = TotalPhysicalMemoryMB,
-                CpuLoad = random.Next(0,10),
+                CpuLoad = random.Next(0,60),
                 ProcessCount = random.Next(100,140),
                 FreeStorage = random.Next(1000,1200),
-                PingMs = random.Next(1,3),
+                PingMs = random.Next(1,10),
                 OSEnvironment = RuntimeInformation.OSDescription,
             };
 
@@ -103,6 +101,7 @@ public class BogusDataClient
             {
                 httpClient.DefaultRequestHeaders.Add("Authorization", AuthorizationToken);
                 httpClient.DefaultRequestHeaders.Add("DeviceId", DeviceId);
+                httpClient.Timeout = new TimeSpan(0, 5, 0);
                 
                 _ = await httpClient.PostAsync(Endpoint, new StringContent(jsonData, System.Text.Encoding.UTF8, "application/json"));
             }
